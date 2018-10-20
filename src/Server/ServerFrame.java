@@ -12,11 +12,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 public class ServerFrame extends JFrame implements ActionListener{
-	private static boolean status;
-	private static JTextArea textArea;
+	protected static JTextArea textArea;
 	private static JButton button;
 	private static Server server;
-	
+
 	public ServerFrame() {
 		setTitle("Bang");//타이틀설정
 		setSize(800,500);//크기설정
@@ -40,24 +39,19 @@ public class ServerFrame extends JFrame implements ActionListener{
 		setVisible(true);
 		
 		server = new Server();
-		
-	}
-	
-	protected static void textAppend(String text) {
-		textArea.append(text+"\n");
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(status) {//서버상태 확인
-			textAppend("서버 중지");
+		if(Server.status) {//서버상태 확인
+			textArea.append("서버 중지\n");
 			button.setText("서버 시작");
-			status = false;
+			Server.status = false;
 			server.serverClose();
 		}else {
-			textAppend("서버 시작");
+			textArea.append("서버 시작\n");
 			button.setText("서버 중지");
-			status = true;
+			Server.status = true;
 			server.serverOpen();
 		}
 	}
