@@ -50,15 +50,14 @@ public class ServerThread implements Runnable {
 				String data = reader.readLine();
 				System.out.println(data);
 				roomChat(data);
-			} catch(SocketException e) {
+			} catch (IOException e) {
 				System.out.println("¸®´õ ´ÝÀ½");
 				try {
 					reader.close();
+					break;
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
 			} 
 		}			
 	}
