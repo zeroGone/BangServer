@@ -14,7 +14,7 @@ import javax.swing.JTextArea;
 public class ServerFrame extends JFrame implements ActionListener{
 	protected static JTextArea textArea;
 	private static JButton button;
-	private static Server server;
+	private static ServerMain server;
 
 	public ServerFrame() {
 		setTitle("Bang");//타이틀설정
@@ -38,20 +38,20 @@ public class ServerFrame extends JFrame implements ActionListener{
 		
 		setVisible(true);
 		
-		server = new Server();
+		server = new ServerMain();
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(Server.status) {//서버상태 확인
+		if(ServerMain.status) {//서버상태 확인
 			textArea.append("서버 중지\n");
 			button.setText("서버 시작");
-			Server.status = false;
+			ServerMain.status = false;
 			server.serverClose();
 		}else {
 			textArea.append("서버 시작\n");
 			button.setText("서버 중지");
-			Server.status = true;
+			ServerMain.status = true;
 			server.serverOpen();
 		}
 	}

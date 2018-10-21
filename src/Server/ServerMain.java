@@ -6,18 +6,18 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class Server implements Runnable{
+//서버메인에서는 서버를 열고 닫거나
+//유저를 받기만함
+public class ServerMain implements Runnable{
 	private ServerSocket server;
 	private Thread serverThread;//유저의 접속들을 받은 쓰레드
-	private Receiver receiver;//유저들과 통신할 클래스
+	private ServerThread receiver;//유저들과 통신할 클래스
 	protected static boolean status;//서버가 열려있는지 검사를 위한 변수
 	private final static int PORT = 2018;
 	private ArrayList<Socket> users;
-	private ArrayList<PrintWriter> writer;
 	
-	public Server() {
+	public ServerMain() {
 		users = new ArrayList<Socket>();
-		writer = new ArrayList<PrintWriter>();
 	}
 	
 	protected void serverOpen() {
@@ -36,10 +36,11 @@ public class Server implements Runnable{
 		serverThread = new Thread(this);
 		serverThread.start();
 		
-		receiver = new Receiver();
+		receiver = new ServerThread();
 	}
 	
 	protected void serverClose() {
+		receiver.notice("서버:close");
 		try {
 			server.close();
 		} catch (IOException e) {
@@ -48,6 +49,8 @@ public class Server implements Runnable{
 		status = false;
 	}
 
+	
+	
 	@Override
 	public void run() {
 		System.out.println("유저 입장 대기중");
