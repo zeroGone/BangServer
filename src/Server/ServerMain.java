@@ -14,11 +14,6 @@ public class ServerMain implements Runnable{
 	private ServerThread receiver;//유저들과 통신할 클래스
 	protected static boolean status;//서버가 열려있는지 검사를 위한 변수
 	private final static int PORT = 2018;
-	private ArrayList<Socket> users;
-	
-	public ServerMain() {
-		users = new ArrayList<Socket>();
-	}
 	
 	protected void serverOpen() {
 		//서버 실행하면 서버소켓 새로운 객체를 만듬
@@ -59,7 +54,6 @@ public class ServerMain implements Runnable{
 		while(status) {
 			try {
 				Socket user = server.accept();
-				users.add(user);
 				receiver.userAdd(user);
 				ServerFrame.textArea.append(user.getInetAddress()+" 접속\n");
 			} catch (IOException e) {
