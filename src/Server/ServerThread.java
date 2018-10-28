@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -14,7 +15,7 @@ public class ServerThread implements Runnable {
 	private ArrayList<PrintWriter> writers;
 	private ArrayList<String> nickNames;
 	private ArrayList<Socket> users;
-	private HashMap<String, BufferedReader[]> rooms;
+	private ArrayList<Room> rooms;
 	private Socket user;
 	
 	public ServerThread() {
@@ -22,7 +23,7 @@ public class ServerThread implements Runnable {
 		readers = new ArrayList<BufferedReader>();
 		writers = new ArrayList<PrintWriter>();
 		nickNames = new ArrayList<String>();
-		rooms = new HashMap<String, BufferedReader[]>();
+		rooms = new ArrayList<Room>();
 	}
 	
 	protected void notice(String str) {
@@ -38,21 +39,9 @@ public class ServerThread implements Runnable {
 	
 	private void roomSet() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("号:");
-		Iterator<String> titles = rooms.keySet().iterator();
-		while(titles.hasNext()) {
-			String title = titles.next();
-			BufferedReader[] peoples = rooms.get(title);
-			int count = 0;
-			for(int i=0; i<peoples.length; i++) {
-				if(peoples[i]==null) break;
-				count ++;
-			}
-			builder.append(title+"/"+Integer.toString(count)+",");
-		}
+		builder.append("号:"+Arrays.toString(rooms.toArray()));
 		for(int i=0; i<writers.size(); i++) writers.get(i).println(builder.toString());
 	}
-	
 	
 
 	private void nickSet() {
@@ -87,9 +76,7 @@ public class ServerThread implements Runnable {
 					for(int i=0; i<writers.size(); i++) writers.get(i).println("号辰特:"+data[1]);
 					break;
 				case "号持失":
-					BufferedReader[] temps = new BufferedReader[7];
-					temps[0] = reader;
-					rooms.put(data[1], temps);
+					rooms.add(new Room(data[1], reader, writers.get(readers.indexOf(reader))));
 					roomSet();
 				}
 			} catch (IOException e) {
