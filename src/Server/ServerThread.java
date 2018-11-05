@@ -43,7 +43,6 @@ public class ServerThread implements Runnable {
 		for(int i=0; i<writers.size(); i++) writers.get(i).println(builder.toString());
 	}
 	
-
 	private void nickSet() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("닉네임:");
@@ -65,6 +64,7 @@ public class ServerThread implements Runnable {
 		while(ServerMain.status) {
 			try {
 				String temp = reader.readLine();
+				System.out.println(temp);
 				String[] data = temp.split(":");
 				switch(data[0]) {
 				case "닉네임":
@@ -76,8 +76,25 @@ public class ServerThread implements Runnable {
 					for(int i=0; i<writers.size(); i++) writers.get(i).println("방채팅:"+data[1]);
 					break;
 				case "방생성":
-					rooms.add(new Room(data[1], reader, writers.get(readers.indexOf(reader))));
+					data = data[1].split(",");
+					Room room = new Room(rooms.size()+1, data[0]);
+					room.addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
+					rooms.add(room);
 					roomSet();
+					break;
+				case "방입장":
+					data = data[1].split(",");
+					int roomId = Integer.parseInt(data[0]);
+					for(int i=0; i<rooms.size(); i++)
+						if(rooms.get(i).getId()==roomId) 
+							rooms.get(i).addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
+					roomSet();
+					break;
+				case "방나감":
+					roomId = Integer.parseInt(data[1]);
+					for(int i=0; i<rooms.size(); i++) if(rooms.get(i).getId()==roomId) rooms.get(i).removeMember(reader);
+					roomSet();
+					break;
 				}
 			} catch (IOException e) {
 				try {
