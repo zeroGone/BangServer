@@ -2,16 +2,15 @@ package Server;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-public class ServerFrame extends JFrame implements ActionListener{
+public class ServerFrame extends JFrame implements ActionListener, WindowListener{
 	protected static JTextArea textArea;
 	private static JButton button;
 	private static ServerMain server;
@@ -23,6 +22,7 @@ public class ServerFrame extends JFrame implements ActionListener{
 		setResizable(false);//화면 사이즈 변경 불가
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);//메인프레임을 닫아서 쓰레드가 실행됨을 방지하기위해 설정해줘야하는 메소드
 		setLayout(null);//레이아웃 null 지정
+		addWindowListener(this);
 		
 		textArea = new JTextArea();//텍스트가 표기될 JTextArea
 		textArea.setEditable(false);//수정불가
@@ -54,5 +54,46 @@ public class ServerFrame extends JFrame implements ActionListener{
 			ServerMain.status = true;
 			server.serverOpen();
 		}
+	}
+
+	//프레임 관리 리스너
+	@Override
+	public void windowActivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosed(WindowEvent e) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void windowClosing(WindowEvent e) {
+		System.out.println("서버 종료");
+	}
+
+	@Override
+	public void windowDeactivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeiconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowIconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowOpened(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 }

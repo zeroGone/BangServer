@@ -9,11 +9,11 @@ import java.util.ArrayList;
 //서버메인에서는 서버를 열고 닫거나
 //유저를 받기만함
 public class ServerMain implements Runnable{
-	private ServerSocket server;
+	private ServerSocket server;//서버 소켓
 	private Thread serverThread;//유저의 접속들을 받은 쓰레드
 	private ServerThread receiver;//유저들과 통신할 클래스
 	protected static boolean status;//서버가 열려있는지 검사를 위한 변수
-	private final static int PORT = 2018;
+	private final static int PORT = 2018;//포트 번호
 	
 	protected void serverOpen() {
 		//서버 실행하면 서버소켓 새로운 객체를 만듬

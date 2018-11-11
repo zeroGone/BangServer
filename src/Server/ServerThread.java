@@ -10,12 +10,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
+//유저들과 통신할 서버 쓰레드
 public class ServerThread implements Runnable {
-	private ArrayList<BufferedReader> readers;
-	private ArrayList<PrintWriter> writers;
-	private ArrayList<String> nickNames;
-	private ArrayList<Socket> users;
-	private ArrayList<Room> rooms;
+	private ArrayList<BufferedReader> readers;//유저들과 통신할 reader들을 관리할 ArrayList
+	private ArrayList<PrintWriter> writers;//유저들에게 통신을 보낼 Writer들을 관리할 ArrayList
+	private ArrayList<String> nickNames;//유저들의 닉네임을 저장할 ArrayList
+	private ArrayList<Socket> users;//유저들의 Socket을 저장할 ArrayList
+	private ArrayList<Room> rooms;//방들을 관리할 ArrayList
 	private Socket user;
 	
 	public ServerThread() {
@@ -30,11 +31,11 @@ public class ServerThread implements Runnable {
 		for(int i=0; i<writers.size(); i++) writers.get(i).println(str);
 	}
 	
-	protected void userAdd(Socket user){	
+	protected void userAdd(Socket user) {//서버메인받은 유저의 소켓을
 		this.user = user; 
-		users.add(user);
+		users.add(user);//추가하고
 		Thread userThread = new Thread(this);
-		userThread.start();
+		userThread.start();//그 유저의 쓰레드 시작
 	}
 	
 	private void roomSet() {
@@ -43,7 +44,7 @@ public class ServerThread implements Runnable {
 		for(int i=0; i<writers.size(); i++) writers.get(i).println(builder.toString());
 	}
 	
-	private void nickSet() {
+	private void nickSet() {//유저
 		StringBuilder builder = new StringBuilder();
 		builder.append("닉네임:");
 		for(int i=0; i<nickNames.size(); i++) builder.append(nickNames.get(i)+",");
@@ -57,7 +58,6 @@ public class ServerThread implements Runnable {
 			reader = new BufferedReader(new InputStreamReader(user.getInputStream()));
 			writers.add(new PrintWriter(user.getOutputStream(),true));
 		} catch (IOException e2) {
-			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		}
 		readers.add(reader);
@@ -67,16 +67,18 @@ public class ServerThread implements Runnable {
 				System.out.println(temp);
 				String[] data = temp.split(":");
 				switch(data[0]) {
-				case "닉네임":
-					nickNames.add(data[1]);
+				case "닉네임"://유저 닉네임 설정
+					nickNames.add(data[1]);//NickNames 추가
+					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+")\n");
 					nickSet();
 					roomSet();
 					break;
 				case "방채팅":
 					for(int i=0; i<writers.size(); i++) writers.get(i).println("방채팅:"+data[1]);
 					break;
-				case "방생성":
-					data = data[1].split(",");
+				case "방생성"://유저 방생성
+					data = data[1].split(",");//[방제목, 방장닉네임]
+					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):"+data[0]+"이란 방만듬\n");
 					Room room = new Room(rooms.size()+1, data[0]);
 					room.addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
 					rooms.add(room);
@@ -85,6 +87,7 @@ public class ServerThread implements Runnable {
 				case "방입장":
 					data = data[1].split(",");
 					int roomId = Integer.parseInt(data[0]);
+					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):"+roomId+"번방 접속\n");
 					for(int i=0; i<rooms.size(); i++)
 						if(rooms.get(i).getId()==roomId) 
 							rooms.get(i).addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
