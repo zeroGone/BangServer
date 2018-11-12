@@ -78,7 +78,7 @@ public class ServerThread implements Runnable {
 					break;
 				case "规积己"://蜡历 规积己
 					data = data[1].split(",");//[规力格, 规厘葱匙烙]
-					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):"+data[0]+"捞鄂 规父惦\n");
+					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):'"+data[0]+"' 规父惦\n");
 					Room room = new Room(rooms.size()+1, data[0]);
 					room.addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
 					rooms.add(room);
@@ -86,16 +86,20 @@ public class ServerThread implements Runnable {
 					break;
 				case "规涝厘":
 					data = data[1].split(",");
-					int roomId = Integer.parseInt(data[0]);
-					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):"+roomId+"锅规 立加\n");
-					for(int i=0; i<rooms.size(); i++)
-						if(rooms.get(i).getId()==roomId) 
-							rooms.get(i).addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
+					int roomId = Integer.parseInt(data[0])-1;
+					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):"+(roomId+1)+"锅规 立加\n");
+					rooms.get(roomId).addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
 					roomSet();
 					break;
 				case "规唱皑":
-					roomId = Integer.parseInt(data[1]);
-					for(int i=0; i<rooms.size(); i++) if(rooms.get(i).getId()==roomId) rooms.get(i).removeMember(reader);
+					roomId = Integer.parseInt(data[1])-1;
+					ServerFrame.textArea.append(user.getInetAddress()+":"+(roomId+1)+"锅规 唱皑\n");
+					rooms.get(roomId).removeMember(reader);
+					//规 昏力
+					if(rooms.get(roomId).getMember()==0) {
+						rooms.remove(roomId);
+						for(int i=roomId; i<rooms.size(); i++) rooms.get(i).setId(i+1);
+					}
 					roomSet();
 					break;
 				}
