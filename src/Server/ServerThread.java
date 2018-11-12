@@ -107,6 +107,19 @@ public class ServerThread implements Runnable {
 				try {
 					for(int i=0; i<readers.size(); i++) 
 						if(readers.get(i).equals(reader)) {
+							boolean check = false;
+							for(int j=0; j<rooms.size(); j++) {//방에 이는 유저가 강종했을 시 
+								if(check==false) {
+									for(int z=0; z<7; z++) {
+										if(rooms.get(j).readers[z]==null) break;
+										else if(rooms.get(j).readers[z].equals(reader)) {
+											rooms.get(j).removeMember(reader);
+											check=true;
+											break;
+										}
+									}
+								}else break;
+							}
 							for(int j=0; j<writers.size(); j++) writers.get(j).println("방채팅:"+nickNames.get(i)+",접속 종료");
 							nickNames.remove(i);
 							readers.remove(i);

@@ -81,8 +81,13 @@ public class Room extends JFrame{
 		this.titleBar.setText(String.format("방인원:%d/7, 방장:%s", member, nicks[방장]));
 		this.revalidate();
 		
-		System.out.println(Arrays.toString(nicks));
-		for(int i=0; i<member; i++) writers[i].println("게임:유저추가:"+member+"/"+i+"/"+Arrays.toString(nicks));
+		if(member>=4) writers[0].println("게임:방장준비");
+		StringBuilder builder = new StringBuilder();
+		for(int i=0; i<nicks.length; i++) {
+			if(nicks[i]==null) break;
+			builder.append(nicks[i]+",");
+		}
+		for(int i=0; i<member; i++) writers[i].println("게임:유저추가:"+member+"/"+i+"/"+builder.toString().substring(0,builder.length()-1));
 	}
 	
 	public void removeMember(BufferedReader reader) {
