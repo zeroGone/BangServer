@@ -34,6 +34,7 @@ public class ServerThread implements Runnable {
 	protected void userAdd(Socket user) {//서버메인받은 유저의 소켓을
 		this.user = user; 
 		users.add(user);//추가하고
+		ServerFrame.textArea.append("유저 인원:"+users.size()+"\n");
 		Thread userThread = new Thread(this);
 		userThread.start();//그 유저의 쓰레드 시작
 	}
@@ -64,12 +65,13 @@ public class ServerThread implements Runnable {
 		while(ServerMain.status) {
 			try {
 				String temp = reader.readLine();
+				if(temp==null) continue;
 				System.out.println(temp);
 				String[] data = temp.split(":");
 				switch(data[0]) {
 				case "닉네임"://유저 닉네임 설정
 					nickNames.add(data[1]);//NickNames 추가
-					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+")\n");
+					ServerFrame.textArea.append(user.getInetAddress()+"의 닉네임:"+data[1]+"\n");
 					nickSet();
 					roomSet();
 					break;
@@ -105,30 +107,41 @@ public class ServerThread implements Runnable {
 				}
 			} catch (IOException e) {
 				try {
-					for(int i=0; i<readers.size(); i++) 
-						if(readers.get(i).equals(reader)) {
-							boolean check = false;
-							for(int j=0; j<rooms.size(); j++) {//방에 이는 유저가 강종했을 시 
-								if(check==false) {
-									for(int z=0; z<7; z++) {
-										if(rooms.get(j).readers[z]==null) break;
-										else if(rooms.get(j).readers[z].equals(reader)) {
-											rooms.get(j).removeMember(reader);
-											check=true;
-											break;
-										}
-									}
-								}else break;
-							}
-							for(int j=0; j<writers.size(); j++) writers.get(j).println("방채팅:"+nickNames.get(i)+",접속 종료");
-							nickNames.remove(i);
-							readers.remove(i);
-							writers.get(i).close();
-							writers.remove(i);
-							ServerFrame.textArea.append(users.get(i).getInetAddress()+" 접속종료\n");
-							users.get(i).close();
-							nickSet();
+					//클라이언트 강종
+					//1.강종한 리더가 방에 있는지 검사함
+					boolean check = false;
+					for(int j=0; j<rooms.size(); j++) {
+						if(check) break;
+						for(int z=0; z<7; z++) {
+							if(rooms.get(j).readers[z]==null) break;
+							if(!rooms.get(j).readers[z].equals(reader)) continue;
+							//1-1.있으면 제거
+							rooms.get(j).removeMember(reader);
+							check=true;
 						}
+					}
+					//2.강종한 리더의 인덱스를 찾음
+					int index = 0;
+					for(int i=0; i<readers.size(); i++) {
+						if(readers.get(i).equals(reader)) {
+							index = i;
+							break;
+						}
+					}
+					//3.접속종료  화면출력
+					ServerFrame.textArea.append(users.get(index).getInetAddress()+" 접속종료, 유저인원"+users.size()+"\n");
+					//4.클라이언트에게 접속종료했다 닉네임으로 보냄
+					for(int j=0; j<writers.size(); j++) writers.get(j).println("방채팅:"+nickNames.get(index)+",접속 종료");
+					//5.리더, 라이터, 닉네임, 유저소켓에서 해당 index 제거
+					readers.remove(index);
+					nickNames.remove(index);
+					writers.get(index).close();
+					writers.remove(index);
+					users.get(index).close();
+					users.remove(index);
+					//6.닉네임 셋팅
+					nickSet();
+					//7.리더닫음
 					reader.close();
 					break;
 				} catch (IOException e1) {

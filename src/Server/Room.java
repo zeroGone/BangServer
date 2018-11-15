@@ -32,13 +32,9 @@ public class Room extends JFrame{
 		this.revalidate();
 	}
 	
-	public int getId() {
-		return this.id;
-	}
+	public int getId() { return this.id; }
 	
-	public int getMember() {
-		return this.member;
-	}
+	public int getMember() { return this.member; }
 	
 	public Room(int id, String title) {
 		setTitle(String.format("id:%d, 방제목:%s", id, title));
@@ -70,24 +66,31 @@ public class Room extends JFrame{
 		nicks = new String[ROOM_MEMBER_MAX_NUM];
 	}
 	
+	//유저 셋팅
+	//방에있는 유저들이 각 유저만큼 자리를 그릴 수있도록
+	private void userSet() {
+		StringBuilder builder = new StringBuilder();
+		for(int i=0; i<nicks.length; i++) {
+			if(nicks[i]==null) break;
+			builder.append(nicks[i]+",");
+		}
+		if(member>=4) writers[0].println("게임:방장준비");
+		for(int i=0; i<member; i++) writers[i].println("게임:유저:"+member+"/"+i+"/"+builder.toString().substring(0,builder.length()-1));
+	}
+	
+	
 	public void addMember(BufferedReader reader, PrintWriter writer, String nick) {
 		readers[member] = reader;
 		writers[member] = writer;
 		nicks[member] = nick;
 		writer.println("방생성:"+this.id);
 		
-		this.member = (member+1)%ROOM_MEMBER_MAX_NUM;
+		this.member = (member+1)%(ROOM_MEMBER_MAX_NUM+1);
 		
 		this.titleBar.setText(String.format("방인원:%d/7, 방장:%s", member, nicks[방장]));
 		this.revalidate();
 		
-		if(member>=4) writers[0].println("게임:방장준비");
-		StringBuilder builder = new StringBuilder();
-		for(int i=0; i<nicks.length; i++) {
-			if(nicks[i]==null) break;
-			builder.append(nicks[i]+",");
-		}
-		for(int i=0; i<member; i++) writers[i].println("게임:유저추가:"+member+"/"+i+"/"+builder.toString().substring(0,builder.length()-1));
+		userSet();
 	}
 	
 	public void removeMember(BufferedReader reader) {
@@ -106,8 +109,11 @@ public class Room extends JFrame{
 			}
 		}
 		
-		this.titleBar.setText(String.format("방인원:%d/7, 방장:%s", member, nicks[방장]));
-		if(member==0) this.dispose();
+		if(member==0) this.dispose();//멤버없으면 종료
+		else {
+			this.titleBar.setText(String.format("방인원:%d/7, 방장:%s", member, nicks[방장]));
+			userSet();
+		}
 		this.revalidate();
 	}
 	
@@ -117,7 +123,5 @@ public class Room extends JFrame{
 	}
 	
 	@Override
-	public String toString() {
-		return this.id+"/"+this.name+"/"+Integer.toString(member);
-	}
+	public String toString() { return this.id+"/"+this.name+"/"+Integer.toString(member); }
 }
