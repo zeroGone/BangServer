@@ -7,8 +7,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
 
 //유저들과 통신할 서버 쓰레드
 public class ServerThread implements Runnable {
@@ -89,9 +87,18 @@ public class ServerThread implements Runnable {
 				case "방입장":
 					data = data[1].split(",");
 					int roomId = Integer.parseInt(data[0])-1;
-					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):"+(roomId+1)+"번방 접속\n");
-					rooms.get(roomId).addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
-					roomSet();
+					//방인원 검사
+					if(rooms.get(roomId).getMember()==7) {//풀방일시
+						//1.리더의 라이터 찾고
+						int index = readers.indexOf(reader);
+						//2.풀방이라보냄
+						writers.get(index).println("풀방");
+					}else{
+						//아니면 접속
+						ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):"+(roomId+1)+"번방 접속\n");
+						rooms.get(roomId).addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
+						roomSet();
+					}
 					break;
 				case "방나감":
 					roomId = Integer.parseInt(data[1])-1;
@@ -121,15 +128,9 @@ public class ServerThread implements Runnable {
 						}
 					}
 					//2.강종한 리더의 인덱스를 찾음
-					int index = 0;
-					for(int i=0; i<readers.size(); i++) {
-						if(readers.get(i).equals(reader)) {
-							index = i;
-							break;
-						}
-					}
+					int index = readers.indexOf(reader);
 					//3.접속종료  화면출력
-					ServerFrame.textArea.append(users.get(index).getInetAddress()+" 접속종료, 유저인원"+users.size()+"\n");
+					ServerFrame.textArea.append(users.get(index).getInetAddress()+" 접속종료, 유저인원"+(users.size()-1)+"\n");
 					//4.클라이언트에게 접속종료했다 닉네임으로 보냄
 					for(int j=0; j<writers.size(); j++) writers.get(j).println("방채팅:"+nickNames.get(index)+",접속 종료");
 					//5.리더, 라이터, 닉네임, 유저소켓에서 해당 index 제거
