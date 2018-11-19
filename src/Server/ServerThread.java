@@ -76,41 +76,99 @@ public class ServerThread implements Runnable {
 				case "방채팅":
 					for(int i=0; i<writers.size(); i++) writers.get(i).println("방채팅:"+data[1]);
 					break;
-				case "방생성"://유저 방생성
-					data = data[1].split(",");//[방제목, 방장닉네임]
-					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):'"+data[0]+"' 방만듬\n");
-					Room room = new Room(rooms.size()+1, data[0]);
-					room.addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
-					rooms.add(room);
-					roomSet();
-					break;
-				case "방입장":
-					data = data[1].split(",");
-					int roomId = Integer.parseInt(data[0])-1;
-					//방인원 검사
-					if(rooms.get(roomId).getMember()==7) {//풀방일시
-						//1.리더의 라이터 찾고
-						int index = readers.indexOf(reader);
-						//2.풀방이라보냄
-						writers.get(index).println("풀방");
-					}else{
-						//아니면 접속
-						ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):"+(roomId+1)+"번방 접속\n");
-						rooms.get(roomId).addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
+				case "방":
+					String 명령 = data[1];
+					data = data[2].split(",");
+					switch(명령) {
+					case "생성"://유저 방생성
+						ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):'"+data[0]+"' 방만듬\n");
+						Room room = new Room(rooms.size()+1, data[0]);
+						room.addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
+						rooms.add(room);
 						roomSet();
+						break;
+					case "입장":
+						int roomId = Integer.parseInt(data[0])-1;
+						//방인원 검사
+						if(rooms.get(roomId).getMember()==7) {//풀방일시
+							//1.리더의 라이터 찾고
+							int index = readers.indexOf(reader);
+							//2.풀방이라보냄
+							writers.get(index).println("풀방");
+						}else{
+							//아니면 접속
+							ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):"+(roomId+1)+"번방 접속\n");
+							rooms.get(roomId).addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
+							roomSet();
+						}
+						break;
 					}
 					break;
-				case "방나감":
-					roomId = Integer.parseInt(data[1])-1;
-					ServerFrame.textArea.append(user.getInetAddress()+":"+(roomId+1)+"번방 나감\n");
-					rooms.get(roomId).removeMember(reader);
-					//방 삭제
-					if(rooms.get(roomId).getMember()==0) {
-						rooms.remove(roomId);
-						for(int i=roomId; i<rooms.size(); i++) rooms.get(i).setId(i+1);
+//				case "방생성"://유저 방생성
+//					data = data[1].split(",");//[방제목, 방장닉네임]
+//					ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):'"+data[0]+"' 방만듬\n");
+//					Room room = new Room(rooms.size()+1, data[0]);
+//					room.addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
+//					rooms.add(room);
+//					roomSet();
+//					break;
+//				case "방입장":
+//					data = data[1].split(",");
+//					int roomId = Integer.parseInt(data[0])-1;
+//					//방인원 검사
+//					if(rooms.get(roomId).getMember()==7) {//풀방일시
+//						//1.리더의 라이터 찾고
+//						int index = readers.indexOf(reader);
+//						//2.풀방이라보냄
+//						writers.get(index).println("풀방");
+//					}else{
+//						//아니면 접속
+//						ServerFrame.textArea.append(user.getInetAddress()+"("+data[1]+"):"+(roomId+1)+"번방 접속\n");
+//						rooms.get(roomId).addMember(reader, writers.get(readers.indexOf(reader)), data[1]);
+//						roomSet();
+//					}
+//					break;
+				case "게임":
+					int roomId = Integer.parseInt(data[2])-1;
+					switch(data[1]) {
+					case "나감":
+						ServerFrame.textArea.append(user.getInetAddress()+":"+(roomId+1)+"번방에서 나감\n");
+						rooms.get(roomId).removeMember(reader);
+						//방 삭제
+						if(rooms.get(roomId).getMember()==0) {
+							rooms.remove(roomId);
+							for(int i=roomId; i<rooms.size(); i++) rooms.get(i).setId(i+1);
+						}
+						roomSet();
+						break;
+					case "채팅":
+						rooms.get(roomId).chatting(reader, data[3]);
+						break;
+					case "시작":
+						roomId = Integer.parseInt(data[1])-1;
+						ServerFrame.textArea.append(roomId+1+"번방 게임시작");
+						rooms.get(roomId).gameSetting();
+						break;
 					}
-					roomSet();
 					break;
+//				case "방나감":
+//					roomId = Integer.parseInt(data[1])-1;
+//					ServerFrame.textArea.append(user.getInetAddress()+":"+(roomId+1)+"번방에서 나감\n");
+//					rooms.get(roomId).removeMember(reader);
+//					//방 삭제
+//					if(rooms.get(roomId).getMember()==0) {
+//						rooms.remove(roomId);
+//						for(int i=roomId; i<rooms.size(); i++) rooms.get(i).setId(i+1);
+//					}
+//					roomSet();
+//					break;
+//				case "게임채팅":
+//					break;
+//				case "게임시작":
+//					roomId = Integer.parseInt(data[1])-1;
+//					ServerFrame.textArea.append(roomId+1+"번방 게임시작");
+//					rooms.get(roomId).gameSetting();
+//					break;
 				}
 			} catch (IOException e) {
 				try {
