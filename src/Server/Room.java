@@ -204,7 +204,7 @@ public class Room extends JFrame{
 	//게임 채팅
 	public void chatting(BufferedReader reader, String 내용) {
 		int index =0; 
-		for(int i=0; readers[i]!=null||i<this.ROOM_MEMBER_MAX_NUM; i++) if(readers[i].equals(reader)) index = i;
+		for(int i=0; readers[i]!=null&&i<this.ROOM_MEMBER_MAX_NUM; i++) if(readers[i].equals(reader)) index = i;
 		this.write(String.format("게임:채팅:%s:%s", nicks[index], 내용));
 	}
 	
@@ -304,7 +304,7 @@ public class Room extends JFrame{
 		
 		@Override
 		public String toString() {
-			return String.format("%s/%s/%s/%d", name, 종류, sign, num);
+			return String.format("%s/%s/%s/%d", 종류, name, sign, num);
 		}
 	}
 }
