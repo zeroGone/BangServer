@@ -23,8 +23,9 @@ public class Room extends JFrame{
 	private PrintWriter[] writers;//방 멤버들의 writer
 	private String[] nicks;//방 멤버들의 닉네임들
 	private String[] userCharacters;//유저의 캐릭터들
-	private String[] userJob;
-	private int[] userLife;
+	private String[] userJob;//유저의 직업들
+	private int[] userLife;//유저의 생명수들
+	private ArrayList<Card>[] userCard;//유저가 갖고있는 카드
 	private ArrayList<Card> deck;
 	private int deckCount;
 	
@@ -66,7 +67,7 @@ public class Room extends JFrame{
 				"럭키듀크","로즈둘란","바트캐시디","벌쳐샘","블랙잭","수지라파예트","슬랩더킬러","시드케첨",
 				"엘그링고","윌리더키드","제시존스","주르도네","캘러미티자넷","키트칼슨","페드로라미네즈","폴레그렛"
 		};
-		Boolean[] check = new Boolean[16];
+		boolean[] check = new boolean[16];
 		
 		//유저직업 설정
 		this.userJob = new String[this.ROOM_MEMBER_MAX_NUM];
@@ -80,7 +81,7 @@ public class Room extends JFrame{
 		if(member==7) job.add("부관");
 		Collections.shuffle(job);
 		
-		for(int i=0; readers[i]!=null||i<7; i++) {
+		for(int i=0; readers[i]!=null&&i<7; i++) {
 			userJob[i]=job.get(i);
 			int random = (int)(Math.random()*16);
 			while(check[random]) random = (int)(Math.random()*16);
@@ -90,97 +91,114 @@ public class Room extends JFrame{
 		
 		//케릭설정 보냄
 		StringBuilder builder = new StringBuilder();
-		for(int i=0; readers[i]!=null||i<7; i++) builder.append(userCharacters[i]+",");
-		this.write(String.format("게임:케릭설정:%s", builder.toString().substring(0, builder.length()-1)));
+		for(int i=0; readers[i]!=null&&i<7; i++) builder.append(userCharacters[i]+",");
+		for(int i=0; writers[i]!=null&&i<7; i++) 
+			writers[i].println(String.format("게임:케릭설정:%d/%d/%s", member, i, builder.toString().substring(0, builder.length()-1)));
 		
-		//생명설정 보냄
 		userLife = new int[]{-1,-1,-1,-1,-1,-1,-1};
 		//직업설정 보냄
-		for(int i=0; readers[i]!=null||i<7; i++) {
+		int 보안관 = 0;
+		for(int i=0; readers[i]!=null&&i<7; i++) {
 			int life = 4;
 			if(userCharacters[i].equals("폴레그렛")||userCharacters[i].equals("엘그링고")) life--;
 			if(userJob[i].equals("보안관")) {
-				this.write("게임:보안관:"+nicks[i]);//보안관 설정
+				보안관 = i;
 				life++;
 			}
 			userLife[i]=life;
-			writers[i].println("게임:직업:"+userJob[i]);
+			writers[i].println("게임:직업설정:"+userJob[i]);
 		}
 		
-		this.write(String.format("게임:생명:%s",Arrays.toString(userLife)));
+		for(int i=0; writers[i]!=null&&i<7; i++) {
+			int 거리 = 0;
+			if(i<=보안관) 거리 = 보안관 - i;
+			else 거리 = member + 보안관 - i;
+			writers[i].println(
+					String.format("게임:보안관설정:%d", 거리));//보안관설정
+		}
 
+		builder.delete(0, builder.length());
+		for(int i=0; userLife[i]!=-1&&i<7; i++) builder.append(userLife[i]+",");
+		//생명설정 보냄
+		for(int i=0; writers[i]!=null&&i<7; i++) {
+			writers[i].println(String.format("게임:생명설정:%d:%d:%s",member,i,builder.toString().substring(0, builder.length()-1)));
+			writers[i].println(String.format("게임:카드설정:%d:%d:%s",member,i,builder.toString().substring(0, builder.length()-1)));//초반에는 생명과 카드수가 같으니 보냄
+		}
+		
     	//덱 셋팅 시작
     	deck = new ArrayList<Card>();
     	for(int i=1; i<=13; i++) {
     		//뱅카드 추가
-    		deck.add(new Card("뱅","다이아",i));
-    		if(i==1||i>=12) deck.add(new Card("뱅","하트",i));
-    		if(i>=2&&i<=9) deck.add(new Card("뱅","클로버",i));
+    		deck.add(new Card("뱅","consume","다이아",i));
+    		if(i==1||i>=12) deck.add(new Card("뱅","consume","하트",i));
+    		if(i>=2&&i<=9) deck.add(new Card("뱅","consume","클로버",i));
     		//빗나감 추가
-    		if(i>=2&&i<=8) deck.add(new Card("빗나감","하트",i));
-    		if(i>=10||i==1) deck.add(new Card("빗나감", "클로버", i));
+    		if(i>=2&&i<=8) deck.add(new Card("빗나감","consume","하트",i));
+    		if(i>=10||i==1) deck.add(new Card("빗나감","consume","클로버", i));
     		//맥주 추가
-    		if(i>=6&&i<=11) deck.add(new Card("맥주", "하트", i));
+    		if(i>=6&&i<=11) deck.add(new Card("맥주","consume", "하트", i));
     		if(i==1) {
-    			deck.add(new Card("뱅","스페이스",i));//뱅카드 추가
-    			deck.add(new Card("카빈", "클로버", i));//카빈 추가
-    			deck.add(new Card("조준경", "하트", i));//조준경 추가
-    		}else if(i==2) deck.add(new Card("다이너마이트", "하트", i));//다이너마이트 추가
-    		else if(i==4) deck.add(new Card("감옥", "하트", i));//감옥 추가
-    		else if(i==5) deck.add(new Card("주점", "하트", i));//주점 추가
+    			deck.add(new Card("뱅","consume","스페이드",i));//뱅카드 추가
+    			deck.add(new Card("카빈", "mount", "클로버", i));//카빈 추가
+    			deck.add(new Card("조준경", "mount", "하트", i));//조준경 추가
+    		}else if(i==2) deck.add(new Card("다이너마이트", "mount", "하트", i));//다이너마이트 추가
+    		else if(i==4) deck.add(new Card("감옥", "mount", "하트", i));//감옥 추가
+    		else if(i==5) deck.add(new Card("주점","consume", "하트", i));//주점 추가
     		else if(i==8) {
-    			deck.add(new Card("결투", "클로버", i));//결투 추가
-    			deck.add(new Card("강탈", "다이아", i));//강탈추가
-    			deck.add(new Card("윈체스터", "하트", i));//윈체스터 추가
+    			deck.add(new Card("결투","consume", "클로버", i));//결투 추가
+    			deck.add(new Card("강탈","consume", "다이아", i));//강탈추가
+    			deck.add(new Card("윈체스터", "mount", "하트", i));//윈체스터 추가
     		}else if(i==9) {
     			//잡화점 추가
-    			deck.add(new Card("잡화점", "클로버", i));
+    			deck.add(new Card("잡화점", "consume","클로버", i));
     			//역마차 추가
-    			deck.add(new Card("역마차", "스페이스", i));
-    			deck.add(new Card("역마차", "스페이스", i));
+    			deck.add(new Card("역마차", "consume","스페이드", i));
+    			deck.add(new Card("역마차", "consume","스페이드", i));
     		}else if(i==10) {
     			//기관총 추가
-    			deck.add(new Card("기관총", "하트", i));
+    			deck.add(new Card("기관총", "consume","하트", i));
     			//볼캐닉추가
-    			deck.add(new Card("볼캐닉", "클로벌", i));
-    			deck.add(new Card("볼캐닉", "하트", i));
-    		}else if(i==11) deck.add(new Card("결투", "스페이스", i));//결투 추가
+    			deck.add(new Card("볼캐닉", "mount",  "클로벌", i));
+    			deck.add(new Card("볼캐닉", "mount",  "하트", i));
+    		}else if(i==11) deck.add(new Card("결투", "consume","스페이드", i));//결투 추가
     		else if(i==12) {
-    			deck.add(new Card("결투", "다이아", i));
-    			deck.add(new Card("잡화점", "스페이스", i));//잡화점 추가
+    			deck.add(new Card("결투", "consume","다이아", i));
+    			deck.add(new Card("잡화점", "consume","스페이드", i));//잡화점 추가
     		}else if(i==13) {
-    			deck.add(new Card("캣벌로우", "하트", i));
-    			deck.add(new Card("스코필드", "스페이스", i));
-    			deck.add(new Card("레밍턴", "클로버", i));//레밍턴 추가
+    			deck.add(new Card("캣벌로우", "consume","하트", i));
+    			deck.add(new Card("스코필드", "mount",  "스페이드", i));
+    			deck.add(new Card("레밍턴", "mount", "클로버", i));//레밍턴 추가
     		}
     		//인디언 추가
-    		if(i==1||i==13) deck.add(new Card("인디언", "다이아", i));
+    		if(i==1||i==13) deck.add(new Card("인디언","consume", "다이아", i));
     		//강탈 추가
-    		if(i==1||i==11||i==12) deck.add(new Card("강탈", "하트", i));
+    		if(i==1||i==11||i==12) deck.add(new Card("강탈", "consume","하트", i));
     		//캣 벌로우 추가
-    		if(i>=9&&i<=11) deck.add(new Card("캣벌로우", "다이아", i));
+    		if(i>=9&&i<=11) deck.add(new Card("캣벌로우", "consume","다이아", i));
     		//웰스파고은행 추가
-    		if(i==3) deck.add(new Card("웰스파고은행", "하트", i));
+    		if(i==3) deck.add(new Card("웰스파고은행", "consume","하트", i));
     		//스코필드 추가
-    		if(i==11||i==12) deck.add(new Card("스코필드", "클로버", i));
+    		if(i==11||i==12) deck.add(new Card("스코필드", "mount",  "클로버", i));
     		//야생마 추가
-    		if(i==8||i==9) deck.add(new Card("야생마", "하트", i));
+    		if(i==8||i==9) deck.add(new Card("야생마", "mount",  "하트", i));
     		//술통 추가
-    		if(i==12||i==13) deck.add(new Card("술통", "스페이스", i));
+    		if(i==12||i==13) deck.add(new Card("술통", "mount",  "스페이드", i));
     		//감옥 추가
-    		if(i==10||i==11) deck.add(new Card("감옥", "스페이스", i));
+    		if(i==10||i==11) deck.add(new Card("감옥", "mount",  "스페이드", i));
     	}//덱 셋팅 끝
     	//셔플
     	Collections.shuffle(deck);
     	
     	//카드설정 보냄
+		userCard = new ArrayList[member];
     	//"카드설정:이름 기호숫자,이름 기호숫자,~"
-    	builder.delete(0, builder.length());
-    	for(int i=0; userLife[i]!=-1||i<7; i++) {
-    		for(int j=0; j<userLife[i]; j++) builder.append(deck.get(deckCount++)+",");
-    		writers[i].println("카드설정:"+builder.toString().substring(0,builder.length()-1));
-        	builder.delete(0, builder.length());
+    	for(int i=0; userLife[i]!=-1&&i<7; i++) {
+    		userCard[i] = new ArrayList<Card>();
+    		for(int j=0; j<userLife[i]; j++) userCard[i].add(deck.get(deckCount++));
     	}
+
+    	//게임세팅 끝
+    	this.write("로그:게임을 시작합니다!");
 	}
 	
 	//게임 채팅
@@ -251,6 +269,18 @@ public class Room extends JFrame{
 		this.revalidate();
 	}
 	
+	public void sendCardDate(BufferedReader reader) {
+		for(int i=0; readers[i]!=null&i<7; i++) {
+			if(readers[i].equals(reader)) {
+				StringBuilder builder = new StringBuilder();
+				for(int j=0; j<userCard[i].size(); j++) builder.append(userCard[i].get(j)+",");
+				System.out.println(builder.toString());
+				writers[i].println("게임:내카드:"+builder.toString().substring(0,builder.length()-1));
+				break;
+			}
+		}
+	}
+	
 	public void write(String 내용) {
 		for(int i=0; i<writers.length; i++) 
 			if(writers[i]!=null) writers[i].println(내용);
@@ -262,17 +292,19 @@ public class Room extends JFrame{
 	//카드
 	class Card{
 		String name;
+		String 종류;
 		String sign;
 		int num;
-		public Card(String name, String sign, int num) {
+		public Card(String name, String 종류, String sign, int num) {
 			this.name=name;
+			this.종류=종류;
 			this.sign=sign;
 			this.num=num;
 		}
 		
 		@Override
 		public String toString() {
-			return String.format("%s %d%s", name, num, sign);
+			return String.format("%s/%s/%s/%d", name, 종류, sign, num);
 		}
 	}
 }

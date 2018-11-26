@@ -145,9 +145,13 @@ public class ServerThread implements Runnable {
 						rooms.get(roomId).chatting(reader, data[3]);
 						break;
 					case "시작":
-						roomId = Integer.parseInt(data[1])-1;
+						roomId = Integer.parseInt(data[2])-1;
 						ServerFrame.textArea.append(roomId+1+"번방 게임시작");
 						rooms.get(roomId).gameSetting();
+						break;
+					case "내카드":
+						roomId = Integer.parseInt(data[2])-1;
+						rooms.get(roomId).sendCardDate(reader);
 						break;
 					}
 					break;
