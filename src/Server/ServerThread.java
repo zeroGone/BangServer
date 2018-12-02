@@ -133,7 +133,7 @@ public class ServerThread implements Runnable {
 						break;
 					case "Ä«µå":
 						if(data.length==6) rooms.get(roomId).userCardUse(reader, data[3], Integer.parseInt(data[5]), data[4].split("/"));
-						else rooms.get(roomId).userCardUse(reader, data[2], -1, data[4].split("/"));
+						else rooms.get(roomId).userCardUse(reader, data[3], -1, data[4].split("/"));
 					}
 					break;
 				}

@@ -228,6 +228,11 @@ public class Room extends JFrame{
 			writers[i].println(String.format("게임:드로우:%d:%d", distance, 2));
 		}
     	
+    	if(deckCount>=80) {
+    		Collections.shuffle(deck);
+    		deckCount=0;
+    	}
+    	this.writers[turn].println("게임:내카드:"+deck.get(deckCount++).toString()+","+deck.get(deckCount++).toString());
     	this.writers[turn].println("게임:내턴");
 	}
 	
