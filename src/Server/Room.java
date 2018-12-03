@@ -15,19 +15,20 @@ public class Room extends JFrame{
 	public final int ROOM_MEMBER_MAX_NUM = 7;//최대 인원 수
 	private final int 방장 = 0;
 	private int member;//현재 인원 수
+	private int id;//방 아이디
+	private int[] userLife;//유저의 생명수들
+	private int deckCount;
+	private int turn;
 	private JTextArea log;//로그
 	private JTextArea titleBar;//타이틀바
-	private int id;//방 아이디
 	private String name;//방 이름
 	protected BufferedReader[] readers;//방 멤버들의 reader
 	private PrintWriter[] writers;//방 멤버들의 writer
 	private String[] nicks;//방 멤버들의 닉네임들
 	private String[] userCharacters;//유저의 캐릭터들
 	private String[] userJob;//유저의 직업들
-	private int[] userLife;//유저의 생명수들
-	private ArrayList<Card>[] userCard;//유저가 갖고있는 카드
 	private ArrayList<Card> deck;
-	private int deckCount;
+	private boolean gameState;//게임 진행 상태
 	
 	public Room(int id, String title) {
 		setTitle(String.format("id:%d, 방제목:%s", id, title));
@@ -120,10 +121,16 @@ public class Room extends JFrame{
 		builder.delete(0, builder.length());
 		for(int i=0; userLife[i]!=-1&&i<7; i++) builder.append(userLife[i]+",");
 		//생명설정 보냄
-		for(int i=0; writers[i]!=null&&i<7; i++) {
+		for(int i=0; writers[i]!=null&&i<7; i++) 
 			writers[i].println(String.format("게임:생명설정:%d:%d:%s",member,i,builder.toString().substring(0, builder.length()-1)));
-			writers[i].println(String.format("게임:카드설정:%d:%d:%s",member,i,builder.toString().substring(0, builder.length()-1)));//초반에는 생명과 카드수가 같으니 보냄
+		
+		builder.delete(0, builder.length());
+		for(int i=0; userLife[i]!=-1&&i<7; i++) {
+			if(i==보안관)	builder.append((userLife[i]+2)+",");
+			else builder.append(userLife[i]+",");
 		}
+		for(int i=0; writers[i]!=null&&i<7; i++) 
+			writers[i].println(String.format("게임:카드설정:%d:%d:%s",member,i,builder.toString().substring(0, builder.length()-1)));
 		
     	//덱 셋팅 시작
     	deck = new ArrayList<Card>();
@@ -158,7 +165,7 @@ public class Room extends JFrame{
     			//기관총 추가
     			deck.add(new Card("기관총", "consume","하트", i));
     			//볼캐닉추가
-    			deck.add(new Card("볼캐닉", "mount",  "클로벌", i));
+    			deck.add(new Card("볼캐닉", "mount",  "클로버", i));
     			deck.add(new Card("볼캐닉", "mount",  "하트", i));
     		}else if(i==11) deck.add(new Card("결투", "consume","스페이드", i));//결투 추가
     		else if(i==12) {
@@ -189,16 +196,29 @@ public class Room extends JFrame{
     	//셔플
     	Collections.shuffle(deck);
     	
-    	//카드설정 보냄
-		userCard = new ArrayList[member];
-    	//"카드설정:이름 기호숫자,이름 기호숫자,~"
+    	//"내카드:이름 기호숫자,이름 기호숫자,~"
     	for(int i=0; userLife[i]!=-1&&i<7; i++) {
-    		userCard[i] = new ArrayList<Card>();
-    		for(int j=0; j<userLife[i]; j++) userCard[i].add(deck.get(deckCount++));
+    		builder.delete(0, builder.length());
+    		for(int j=0; j<userLife[i]; j++) builder.append(deck.get(deckCount++).toString()+",");
+    		if(i==보안관) builder.append(deck.get(deckCount++).toString()+","+deck.get(deckCount++).toString()+",");
+    		writers[i].println("게임:내카드:"+builder.toString().substring(0,builder.length()-1));
     	}
 
     	//게임세팅 끝
     	this.write("로그:게임을 시작합니다!");
+    	this.write("로그:보안관부터 시작");
+    	
+    	writers[보안관].println("게임:내턴");
+    	this.turn=보안관;
+    	this.gameState = true;
+	}
+	
+	public void nextTurn() {
+		turn = (turn + 1)%member;
+		while(this.userLife[turn]==0) turn = (turn + 1)%member;
+		
+    	this.write("로그:"+this.nicks[turn]+"의 턴!");
+    	this.writers[turn].println("게임:내턴");
 	}
 	
 	//게임 채팅
@@ -219,6 +239,8 @@ public class Room extends JFrame{
 	
 	public int getMember() { return this.member; }
 
+	public boolean getGameState() { return this.gameState; }
+	
 	//유저 셋팅
 	//방에있는 유저들이 각 유저만큼 자리를 그릴 수있도록
 	private void userSet() {
@@ -269,25 +291,18 @@ public class Room extends JFrame{
 		this.revalidate();
 	}
 	
-	public void sendCardDate(BufferedReader reader) {
-		for(int i=0; readers[i]!=null&i<7; i++) {
-			if(readers[i].equals(reader)) {
-				StringBuilder builder = new StringBuilder();
-				for(int j=0; j<userCard[i].size(); j++) builder.append(userCard[i].get(j)+",");
-				System.out.println(builder.toString());
-				writers[i].println("게임:내카드:"+builder.toString().substring(0,builder.length()-1));
-				break;
-			}
-		}
-	}
-	
 	public void write(String 내용) {
 		for(int i=0; i<writers.length; i++) 
 			if(writers[i]!=null) writers[i].println(내용);
 	}
 	
 	@Override
-	public String toString() { return this.id+"/"+this.name+"/"+Integer.toString(member); }
+	public String toString() { 
+		String str;
+		if(this.gameState) str = "Playing";
+		else str = "Waiting";
+		
+		return this.id+"/"+this.name+"/"+str+"/"+Integer.toString(member); }
 	
 	//카드
 	class Card{
