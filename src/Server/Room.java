@@ -111,11 +111,8 @@ public class Room extends JFrame{
 		}
 		
 		for(int i=0; writers[i]!=null&&i<7; i++) {
-			int 거리 = 0;
-			if(i<=보안관) 거리 = 보안관 - i;
-			else 거리 = member + 보안관 - i;
-			writers[i].println(
-					String.format("게임:보안관설정:%d", 거리));//보안관설정
+			int distance = this.distanceCalculate(i, 보안관);
+			writers[i].println(String.format("게임:보안관설정:%d", distance));//보안관설정
 		}
 
 		builder.delete(0, builder.length());
@@ -213,12 +210,41 @@ public class Room extends JFrame{
     	this.gameState = true;
 	}
 	
+	private int distanceCalculate(int start, int goal) {
+		int distance = 0;
+		if(start<=goal) distance = goal - start;
+		else distance = member + goal - start;
+		return distance;
+	}
+	
 	public void nextTurn() {
 		turn = (turn + 1)%member;
 		while(this.userLife[turn]==0) turn = (turn + 1)%member;
 		
     	this.write("로그:"+this.nicks[turn]+"의 턴!");
+    	
+    	for(int i=0; writers[i]!=null&&i<7; i++) {
+			int distance = this.distanceCalculate(i, turn);
+			writers[i].println(String.format("게임:드로우:%d:%d", distance, 2));
+		}
+    	
     	this.writers[turn].println("게임:내턴");
+	}
+	
+	public void userCardUse(BufferedReader user, String value, int goal, String... data) {
+		int index = 0;
+		for(int i=0; readers[i]!=null&&i<7; i++) if(readers[i].equals(user)) index = i;
+		if(value.equals("버림")) this.write(String.format("로그:%s님이 %s 카드를 버렸습니다.", this.nicks[index], data[1]));
+		else if(goal == -1){
+			this.write(String.format("로그:%s님이 %s 카드를 사용하였습니다.", this.nicks[index], data[1]));
+			
+		}else {
+			this.write(String.format("로그:%s님이 %s님에게 %s 카드를 사용하였습니다.", this.nicks[index], this.nicks[(index+goal)%member], data[1]));
+		}
+		for(int i=0; writers[i]!=null&&i<7; i++) {
+			int distance = this.distanceCalculate(i, index);
+			writers[i].println(String.format("게임:카드냄:%d", distance));
+		}
 	}
 	
 	//게임 채팅

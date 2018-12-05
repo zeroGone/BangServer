@@ -124,7 +124,6 @@ public class ServerThread implements Runnable {
 						rooms.get(roomId).chatting(reader, data[3]);
 						break;
 					case "시작":
-						roomId = Integer.parseInt(data[2])-1;
 						ServerFrame.textArea.append(roomId+1+"번방 게임시작");
 						rooms.get(roomId).gameSetting();
 						roomSet();
@@ -132,6 +131,9 @@ public class ServerThread implements Runnable {
 					case "턴종료":
 						rooms.get(roomId).nextTurn();
 						break;
+					case "카드":
+						if(data.length==6) rooms.get(roomId).userCardUse(reader, data[3], Integer.parseInt(data[5]), data[4].split("/"));
+						else rooms.get(roomId).userCardUse(reader, data[2], -1, data[4].split("/"));
 					}
 					break;
 				}
