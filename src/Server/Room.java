@@ -29,6 +29,7 @@ public class Room extends JFrame{
 	private String[] userJob;//유저의 직업들
 	private ArrayList<Card> deck;
 	private boolean gameState;//게임 진행 상태
+	private Card tombCard;
 	
 	public Room(int id, String title) {
 		setTitle(String.format("id:%d, 방제목:%s", id, title));
@@ -217,6 +218,24 @@ public class Room extends JFrame{
 		return distance;
 	}
 	
+	public void sendUserCardData(int caster, int goal, String cards) {
+		this.writers[caster].println(String.format(
+				"게임:카드정보::%d:%d:%s", caster, goal, cards));
+	}
+
+	public void cattleRow(int goal, String data) {
+		if(data.length()==0) this.write("로그:캣벌로우 실패!");
+		else {
+			String[] card = data.split("/");
+			for(int i=0; writers[i]!=null&&i<7; i++) {
+				int distance = this.distanceCalculate(i, goal);
+				if(!card[0].equals("mount")) writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, -1));
+				else writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, 0));
+			}
+		}
+		writers[goal].println(String.format("게임:카드삭제:%s", data));
+	}
+	
 	public void nextTurn() {
 		turn = (turn + 1)%member;
 		while(this.userLife[turn]==0) turn = (turn + 1)%member;
@@ -239,13 +258,38 @@ public class Room extends JFrame{
 	public void userCardUse(BufferedReader user, String value, int goal, String... data) {
 		int index = 0;
 		for(int i=0; readers[i]!=null&&i<7; i++) if(readers[i].equals(user)) index = i;
-		if(value.equals("버림")) this.write(String.format("로그:%s님이 %s 카드를 버렸습니다.", this.nicks[index], data[1]));
-		else if(goal == -1){
-			this.write(String.format("로그:%s님이 %s 카드를 사용하였습니다.", this.nicks[index], data[1]));
-			
-		}else {
-			this.write(String.format("로그:%s님이 %s님에게 %s 카드를 사용하였습니다.", this.nicks[index], this.nicks[(index+goal)%member], data[1]));
+		Card card = new Card(data[1],data[0],data[2],Integer.parseInt(data[3]));
+		//
+		if(value.equals("버림")) {
+			tombCard = card;
+			this.write(String.format("로그:%s님이 %s 카드를 버렸습니다.", this.nicks[index], card.name));
+			this.write("게임:무덤설정:"+card);
 		}
+		//
+		else if(goal == -1){
+			this.write(String.format("로그:%s님이 %s 카드를 사용하였습니다.", this.nicks[index], card.name));
+			//장착카드 일 경우
+			if(data[0].equals("mount")) {
+				for(int i=0; writers[i]!=null&&i<7; i++) {
+					int distance = this.distanceCalculate(i, index);
+					writers[i].println(String.format("게임:장착설정:%d:%s", distance, card));
+				}
+			}else {
+				
+			}
+		}
+		//
+		else {
+			this.write(String.format("로그:%s님이 %s님에게 %s 카드를 사용하였습니다.", this.nicks[index], this.nicks[(index+goal)%member], data[1]));
+			switch(data[1]){
+				case "캣벌로우":
+					writers[(index+goal)%member].println(
+							String.format("게임:캣벌로우::%d:%d:", index, (index+goal)%member));
+					break;
+			}
+		}
+		
+		//애니메이션
 		for(int i=0; writers[i]!=null&&i<7; i++) {
 			int distance = this.distanceCalculate(i, index);
 			writers[i].println(String.format("게임:카드냄:%d", distance));
