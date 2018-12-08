@@ -211,6 +211,12 @@ public class Room extends JFrame{
     	this.gameState = true;
 	}
 	
+	public void tombSet(String[] data) {
+		Card card = new Card(data[1],data[0],data[2],Integer.parseInt(data[3]));
+		tombCard = card;
+		this.write("게임:무덤설정:"+card);
+	}
+	
 	private int distanceCalculate(int start, int goal) {
 		int distance = 0;
 		if(start<=goal) distance = goal - start;
@@ -233,6 +239,16 @@ public class Room extends JFrame{
 				else writers[i].println(String.format("게임:장착설정:삭제:%d:%s", distance, card[1]));
 			}
 			if(!card[0].equals("mount")) writers[goal].println(String.format("게임:카드삭제:%s", data));
+		}
+	}
+
+	public void bang(int caster, int goal, String check) {
+		System.out.println("뱅테스트:"+Integer.toString(caster)+","+Integer.toString(goal));
+		for(int i=0; writers[i]!=null&&i<7; i++) {
+			caster = this.distanceCalculate(i, caster);
+			goal = this.distanceCalculate(i, goal);
+			if(check.equals("true")) writers[i].println(String.format("게임:카드개수설정:%d:%d", goal, -1));
+			writers[i].println(String.format("게임:애니:뱅:%d:%d:%s", caster, goal, check));
 		}
 	}
 	
@@ -309,6 +325,11 @@ public class Room extends JFrame{
 				case "캣벌로우":
 					writers[(index+goal)%member].println(
 							String.format("게임:캣벌로우::%d:%d:", index, (index+goal)%member));
+					this.cardPayAni(index);
+					break;
+				case "뱅":
+					writers[(index+goal)%member].println(
+							String.format("게임:뱅::%d:%d:", index, (index+goal)%member));
 					this.cardPayAni(index);
 					break;
 			}

@@ -141,6 +141,19 @@ public class ServerThread implements Runnable {
 					case "Ä¹¹ú·Î¿ì":
 						rooms.get(roomId).cattleRow(Integer.parseInt(data[4]), data[5]);
 						break;
+					case "¹«´ı¼³Á¤":
+						rooms.get(roomId).tombSet(data[3].split("/"));
+						break;
+					case "ÀåÂø»èÁ¦":
+						for(int i=0; i<7&&rooms.get(roomId).readers[i]!=null; i++) 
+							if(rooms.get(roomId).readers[i].equals(reader)) {
+								rooms.get(roomId).cattleRow(i, data[3]);
+								break;
+							}
+						break;
+					case "¹ğ":
+						rooms.get(roomId).bang(Integer.parseInt(data[3]), Integer.parseInt(data[4]), data[5]);
+						break;
 					}
 					break;
 				}
