@@ -230,10 +230,10 @@ public class Room extends JFrame{
 			for(int i=0; writers[i]!=null&&i<7; i++) {
 				int distance = this.distanceCalculate(i, goal);
 				if(!card[0].equals("mount")) writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, -1));
-				else writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, 0));
+				else writers[i].println(String.format("게임:장착설정:삭제:%d:%s", distance, card[1]));
 			}
+			if(!card[0].equals("mount")) writers[goal].println(String.format("게임:카드삭제:%s", data));
 		}
-		writers[goal].println(String.format("게임:카드삭제:%s", data));
 	}
 	
 	public void nextTurn() {
@@ -263,39 +263,68 @@ public class Room extends JFrame{
 		if(value.equals("버림")) {
 			tombCard = card;
 			this.write(String.format("로그:%s님이 %s 카드를 버렸습니다.", this.nicks[index], card.name));
+			this.cardPayAni(index);
 			this.write("게임:무덤설정:"+card);
 		}
 		//
 		else if(goal == -1){
 			this.write(String.format("로그:%s님이 %s 카드를 사용하였습니다.", this.nicks[index], card.name));
 			//장착카드 일 경우
-			if(data[0].equals("mount")) {
+			if(card.종류.equals("mount")) {
 				for(int i=0; writers[i]!=null&&i<7; i++) {
 					int distance = this.distanceCalculate(i, index);
-					writers[i].println(String.format("게임:장착설정:%d:%s", distance, card));
+					writers[i].println(String.format("게임:장착설정:추가:%d:%s", distance, card));
+					writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, -1));
 				}
-			}else {
-				
+			}else if(card.name.equals("웰스파고은행")){
+				if(deckCount>=80) {
+		    		Collections.shuffle(deck);
+		    		deckCount=0;
+		    	}
+				writers[index].println("게임:내카드:"+
+						deck.get(deckCount++).toString()+","+deck.get(deckCount++).toString()+","+deck.get(deckCount++).toString());
+				this.write("게임:애니:웰스파고은행");
+				for(int i=0; writers[i]!=null&&i<7; i++) {
+					int distance = this.distanceCalculate(i, index);
+					writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, 2));
+				}
+			}else if(card.name.equals("역마차")) {
+				if(deckCount>=80) {
+		    		Collections.shuffle(deck);
+		    		deckCount=0;
+		    	}
+				writers[index].println("게임:내카드:"+
+						deck.get(deckCount++).toString()+","+deck.get(deckCount++).toString());
+				this.write("게임:애니:역마차");
+				for(int i=0; writers[i]!=null&&i<7; i++) {
+					int distance = this.distanceCalculate(i, index);
+					writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, 1));
+				}
 			}
 		}
 		//
 		else {
-			this.write(String.format("로그:%s님이 %s님에게 %s 카드를 사용하였습니다.", this.nicks[index], this.nicks[(index+goal)%member], data[1]));
+			this.write(String.format("로그:%s님이 %s님에게 %s 카드를 사용하였습니다.", this.nicks[index], this.nicks[(index+goal)%member], card.name));
 			switch(data[1]){
 				case "캣벌로우":
 					writers[(index+goal)%member].println(
 							String.format("게임:캣벌로우::%d:%d:", index, (index+goal)%member));
+					this.cardPayAni(index);
 					break;
 			}
 		}
 		
+		
+	}
+
+	private void cardPayAni(int index) {
 		//애니메이션
 		for(int i=0; writers[i]!=null&&i<7; i++) {
 			int distance = this.distanceCalculate(i, index);
 			writers[i].println(String.format("게임:카드냄:%d", distance));
 		}
 	}
-	
+
 	//게임 채팅
 	public void chatting(BufferedReader reader, String 내용) {
 		int index =0; 
