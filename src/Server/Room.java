@@ -3,7 +3,6 @@ package Server;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 
 import javax.swing.JFrame;
@@ -19,6 +18,7 @@ public class Room extends JFrame{
 	private int[] userLife;//유저의 생명수들
 	private int deckCount;
 	private int turn;
+	private boolean[] turnCheck;
 	private JTextArea log;//로그
 	private JTextArea titleBar;//타이틀바
 	private String name;//방 이름
@@ -209,6 +209,8 @@ public class Room extends JFrame{
     	writers[보안관].println("게임:내턴");
     	this.turn=보안관;
     	this.gameState = true;
+    	
+    	this.turnCheck = new boolean[this.member];
 	}
 	
 	public void tombSet(String[] data) {
@@ -224,39 +226,64 @@ public class Room extends JFrame{
 		return distance;
 	}
 	
-	public void sendUserCardData(int caster, int goal, String cards) {
+	public void sendUserCardData(int caster, int goal, String take, String cards) {
 		this.writers[caster].println(String.format(
-				"게임:카드정보::%d:%d:%s", caster, goal, cards));
+				"게임:카드정보:%d:%d:%s:%s", caster, goal, take, cards));
 	}
 
-	public void cattleRow(int goal, String data) {
+	public void cattleRow(int goal, String data, String mounting) {
 		if(data.length()==0) this.write("로그:캣벌로우 실패!");
 		else {
 			String[] card = data.split("/");
 			for(int i=0; writers[i]!=null&&i<7; i++) {
 				int distance = this.distanceCalculate(i, goal);
-				if(!card[0].equals("mount")) writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, -1));
-				else writers[i].println(String.format("게임:장착설정:삭제:%d:%s", distance, card[1]));
+				if(mounting.equals("mounting")) writers[i].println(String.format("게임:장착설정:삭제:%d:%s", distance, card[1]));
+				else if(card[1].equals("야생마")&&mounting.equals("mouting")) 
+					writers[i].println("게임:야생마설정:"+Integer.toString(distance)+":"+Integer.toString(-1));
+				else writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, -1));
 			}
-			if(!card[0].equals("mount")) writers[goal].println(String.format("게임:카드삭제:%s", data));
+			if(mounting.equals("consume")) writers[goal].println(String.format("게임:카드삭제:%s", data));
+			else if(card[1].equals("조준경")&&mounting.equals("mouting")) writers[goal].println("게임:거리설정:"+Integer.toString(-1));
+			this.write("게임:무덤설정:"+data);
+		}
+	}
+	
+	public void take(int caster, int goal, String data, String mounting) {
+		if(data.length()==0) this.write("로그:강탈 실패!");
+		else {
+			String[] card = data.split("/");
+			for(int i=0; writers[i]!=null&&i<7; i++) {
+				int distance1 = this.distanceCalculate(i, caster);
+				int distance2 = this.distanceCalculate(i, goal);
+				writers[i].println(String.format("게임:카드개수설정:%d:%d", distance1, 1));
+				if(mounting.equals("mounting")) writers[i].println(String.format("게임:장착설정:삭제:%d:%s", distance2, card[1]));
+				else if(card[1].equals("야생마")&&mounting.equals("mouting")) 
+					writers[i].println("게임:야생마설정:"+Integer.toString(distance2)+":"+Integer.toString(-1));
+				else writers[i].println(String.format("게임:카드개수설정:%d:%d", distance2, -1));
+				writers[i].println(String.format("게임:애니:%s:%d:%d", "강탈", distance1, distance2));
+			}
+			if(mounting.equals("consume")) writers[goal].println(String.format("게임:카드삭제:%s", data));
+			else if(card[1].equals("조준경")&&mounting.equals("mouting")) writers[goal].println("게임:거리설정:"+Integer.toString(-1));
+			writers[caster].println(String.format("게임:내카드:%s", data));
 		}
 	}
 
 	public void bang(int caster, int goal, String check) {
 		for(int i=0; writers[i]!=null&&i<7; i++) {
-			int distance1 = caster;
-			int distance2 = goal;
-			distance1 = this.distanceCalculate(i, distance1);
-			distance2 = this.distanceCalculate(i, distance2);
+			int distance1 = this.distanceCalculate(i, caster);
+			int distance2 = this.distanceCalculate(i, goal);
 			if(check.equals("true")) writers[i].println(String.format("게임:카드개수설정:%d:%d", distance2, -1));
 			else writers[i].println(String.format("게임:생명수설정:%d:%d", distance2, -1));
-//			writers[i].println(String.format("게임:애니:뱅:%d:%d:%s", caster, goal, check));
+			writers[i].println(String.format("게임:애니:뱅:%d:%d:%s", distance1, distance2, check));
 		}
 	}
 	
 	public void nextTurn() {
 		turn = (turn + 1)%member;
-		while(this.userLife[turn]==0) turn = (turn + 1)%member;
+		while(this.userLife[turn]==0&&this.turnCheck[turn]) {
+			this.turnCheck[turn] = false;
+			turn = (turn + 1)%member;
+		}
 		
     	this.write("로그:"+this.nicks[turn]+"의 턴!");
     	
@@ -291,6 +318,7 @@ public class Room extends JFrame{
 			if(card.종류.equals("mount")) {
 				for(int i=0; writers[i]!=null&&i<7; i++) {
 					int distance = this.distanceCalculate(i, index);
+					if(card.name.equals("야생마")) writers[i].println("게임:야생마설정:"+Integer.toString(distance)+":"+Integer.toString(1));
 					writers[i].println(String.format("게임:장착설정:추가:%d:%s", distance, card));
 					writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, -1));
 				}
@@ -318,6 +346,12 @@ public class Room extends JFrame{
 					int distance = this.distanceCalculate(i, index);
 					writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, 1));
 				}
+			}else if(card.name.equals("맥주")) {
+				for(int i=0; writers[i]!=null&&i<7; i++) {
+					int distance = this.distanceCalculate(i, index);
+					writers[i].println(String.format("게임:생명수설정:%d:%d", distance, 1));
+					writers[i].println(String.format("게임:카드개수설정:%d:%d", distance, -1));
+				}
 			}
 		}
 		//
@@ -326,13 +360,27 @@ public class Room extends JFrame{
 			switch(data[1]){
 				case "캣벌로우":
 					writers[(index+goal)%member].println(
-							String.format("게임:캣벌로우::%d:%d:", index, (index+goal)%member));
+							String.format("게임:캣벌로우:%d:%d", index, (index+goal)%member));
+					this.cardPayAni(index);
+					break;
+				case "강탈":
+					writers[(index+goal)%member].println(
+							String.format("게임:강탈:%d:%d:", index, (index+goal)%member));
 					this.cardPayAni(index);
 					break;
 				case "뱅":
 					writers[(index+goal)%member].println(
-							String.format("게임:뱅::%d:%d:", index, (index+goal)%member));
+							String.format("게임:뱅::%d:%d", index, (index+goal)%member));
 					this.cardPayAni(index);
+					break;
+				case "감옥":
+					int temp = (index+goal)%member;
+					this.turnCheck[temp] = true;
+					this.cardPayAni(index);
+					for(int i=0; writers[i]!=null&&i<7; i++) {
+						int distance = this.distanceCalculate(i, temp);
+						writers[i].println(String.format("게임:애니:%s:%d", "감옥" , distance));
+					}
 					break;
 			}
 		}

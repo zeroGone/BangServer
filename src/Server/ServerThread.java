@@ -136,10 +136,15 @@ public class ServerThread implements Runnable {
 						else rooms.get(roomId).userCardUse(reader, data[3], -1, data[4].split("/"));
 						break;
 					case "Ä«µåÁ¤º¸":
-						rooms.get(roomId).sendUserCardData(Integer.parseInt(data[3]), Integer.parseInt(data[4]), data[5]);
+						rooms.get(roomId).sendUserCardData(Integer.parseInt(data[3]), Integer.parseInt(data[4]), data[5], data[6]);
 						break;
 					case "Ä¹¹ú·Î¿ì":
-						rooms.get(roomId).cattleRow(Integer.parseInt(data[4]), data[5]);
+						if(data.length==7) rooms.get(roomId).cattleRow(Integer.parseInt(data[4]), data[5], data[6]);
+						else rooms.get(roomId).cattleRow(Integer.parseInt(data[4]), data[5], "consume");
+						break;
+					case "°­Å»":
+						if(data.length==7) rooms.get(roomId).take(Integer.parseInt(data[3]), Integer.parseInt(data[4]), data[5], data[6]);
+						else rooms.get(roomId).take(Integer.parseInt(data[3]), Integer.parseInt(data[4]), data[5], "consume");
 						break;
 					case "¹«´ı¼³Á¤":
 						rooms.get(roomId).tombSet(data[3].split("/"));
@@ -147,7 +152,7 @@ public class ServerThread implements Runnable {
 					case "ÀåÂø»èÁ¦":
 						for(int i=0; i<7&&rooms.get(roomId).readers[i]!=null; i++) 
 							if(rooms.get(roomId).readers[i].equals(reader)) {
-								rooms.get(roomId).cattleRow(i, data[3]);
+								rooms.get(roomId).cattleRow(i, data[3], "mounting");
 								break;
 							}
 						break;
