@@ -243,12 +243,14 @@ public class Room extends JFrame{
 	}
 
 	public void bang(int caster, int goal, String check) {
-		System.out.println("뱅테스트:"+Integer.toString(caster)+","+Integer.toString(goal));
 		for(int i=0; writers[i]!=null&&i<7; i++) {
-			caster = this.distanceCalculate(i, caster);
-			goal = this.distanceCalculate(i, goal);
-			if(check.equals("true")) writers[i].println(String.format("게임:카드개수설정:%d:%d", goal, -1));
-			writers[i].println(String.format("게임:애니:뱅:%d:%d:%s", caster, goal, check));
+			int distance1 = caster;
+			int distance2 = goal;
+			distance1 = this.distanceCalculate(i, distance1);
+			distance2 = this.distanceCalculate(i, distance2);
+			if(check.equals("true")) writers[i].println(String.format("게임:카드개수설정:%d:%d", distance2, -1));
+			else writers[i].println(String.format("게임:생명수설정:%d:%d", distance2, -1));
+//			writers[i].println(String.format("게임:애니:뱅:%d:%d:%s", caster, goal, check));
 		}
 	}
 	
