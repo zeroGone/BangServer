@@ -232,7 +232,7 @@ public class Room extends JFrame{
 	}
 
 	public void cattleRow(int goal, String data, String mounting) {
-		if(data.length()==0) this.write("·Î±×:Ä¹¹ú·Î¿ì ½ÇÆÐ!");
+		if(data.equals(" ")) this.write("·Î±×:Ä¹¹ú·Î¿ì ½ÇÆÐ!");
 		else {
 			String[] card = data.split("/");
 			for(int i=0; writers[i]!=null&&i<7; i++) {
@@ -249,7 +249,7 @@ public class Room extends JFrame{
 	}
 	
 	public void take(int caster, int goal, String data, String mounting) {
-		if(data.length()==0) this.write("·Î±×:°­Å» ½ÇÆÐ!");
+		if(data.equals(" ")) this.write("·Î±×:°­Å» ½ÇÆÐ!");
 		else {
 			String[] card = data.split("/");
 			for(int i=0; writers[i]!=null&&i<7; i++) {
@@ -280,7 +280,7 @@ public class Room extends JFrame{
 	
 	public void nextTurn() {
 		turn = (turn + 1)%member;
-		while(this.userLife[turn]==0&&this.turnCheck[turn]) {
+		while(this.userLife[turn]==0||this.turnCheck[turn]) {
 			this.turnCheck[turn] = false;
 			turn = (turn + 1)%member;
 		}
